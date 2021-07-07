@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/dev/database/datajpa
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        #show_sql: true   # JPA가 실행하는 Query를 Console에 모두 출력함
+        format_sql: true  # Query가 Formatting되어 예쁘게 출력됨
+
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    # org.hibernate.type: trace   # 파라미터 바인딩된 Query가 전송될 때 파라미터 값까지 출력
