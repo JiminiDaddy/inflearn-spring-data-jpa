@@ -1,17 +1,24 @@
 package com.chpark.study.datajpa.repository;
 
 import com.chpark.study.datajpa.domain.Member;
+import com.chpark.study.datajpa.domain.Team;
+import com.chpark.study.datajpa.dto.MemberDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Rollback(false)
 @Transactional
@@ -19,6 +26,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MemberRepositoryTest {
 	@Autowired
 	private MemberRepository memberRepository;
+
+	@Autowired
+	private TeamRepository teamRepository;
 
 	@Test
 	void testMember() {
@@ -84,5 +94,85 @@ class MemberRepositoryTest {
 
 		List<Member> list = memberRepository.findBy();
 		System.out.println(list.size());
+	}
+
+	@Test
+	@DisplayName("@Query 멤버 조회")
+	void findMemberWithQuery() {
+		Member member1 = new Member("user1", 30);
+		Member member2 = new Member("user2", 10);
+		Member member3 = new Member("user2", 40);
+
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		List<Member> findMembers = memberRepository.findMember("user2", 40);
+		assertThat(findMembers.size()).isEqualTo(1);
+		assertThat(findMembers.get(0)).isSameAs(member3);
+	}
+
+	@Test
+	@DisplayName("Dto로 조회")
+	void findMemberDto() {
+		Team team = new Team("team1");
+		teamRepository.save(team);
+
+		Member member1 = new Member("user1", 30);
+		member1.changeTeam(team);
+		memberRepository.save(member1);
+
+		List<MemberDto> memberDtos = memberRepository.findMemberDto();
+		assertThat(memberDtos.size()).isEqualTo(1);
+		for (MemberDto memberDto : memberDtos) {
+			System.out.println("memberDto = " + memberDto);
+		}
+	}
+
+	@Test
+	@DisplayName("컬렉션을 in절로 만들어 name이 포함된 멤버 조회")
+	void findByNames() {
+		Member member1 = new Member("user1", 30);
+		Member member2 = new Member("user2", 20);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+
+		List<Member> findMembers = memberRepository.findByNames(Arrays.asList("user1", "user11", "user21"));
+		assertThat(findMembers.size()).isEqualTo(1);
+		for (Member findMember : findMembers) {
+			System.out.println("findMember = " + findMember);
+		}
+	}
+
+	@Test
+	@DisplayName("멤버 조회 결과를 Collection, Optional, Entity로 반환")
+	void findMembersByName() {
+		Member member1 = new Member("user1", 30);
+		Member member2 = new Member("user2", 20);
+		Member member3 = new Member("user2", 50);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		List<Member> findMembers = memberRepository.findMembersByName("user2");
+		assertThat(findMembers.size()).isEqualTo(2);
+		for (Member findMember : findMembers) {
+			System.out.println("findMember = " + findMember);
+		}
+
+		findMembers = memberRepository.findMembersByName("user4");
+		assertThat(findMembers.size()).isEqualTo(0);
+		assertThat(findMembers.size()).isNotNull();
+		System.out.println("findMembers = " + findMembers);
+
+		Optional<Member> findOptionalMember = memberRepository.findOptionalMemberByName("user1");
+		assertThat(findOptionalMember.get().getName()).isEqualTo(member1.getName());
+
+		Member findMember = memberRepository.findMemberByName("user1");
+		assertThat(findMember).isNotNull();
+
+		assertThatThrownBy(() -> {
+			Member find = memberRepository.findMemberByName("user2");
+		}).isInstanceOf(IncorrectResultSizeDataAccessException.class);	// NonUniqueResultException을 Spring이 한번 감싸 새로운 예외 던짐
 	}
 }
