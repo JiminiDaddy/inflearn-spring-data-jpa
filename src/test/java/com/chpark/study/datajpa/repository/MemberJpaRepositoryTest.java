@@ -63,4 +63,28 @@ class MemberJpaRepositoryTest {
 		long deletedCount = memberJpaRepository.count();
 		assertThat(deletedCount).isEqualTo(0);
 	}
+
+	@Test
+	@DisplayName("페이징 기능")
+	void findPaging() {
+		Member member1 = new Member("member1", 10);
+		Member member2 = new Member("member2", 10);
+		Member member3 = new Member("member3", 10);
+		Member member4 = new Member("member4", 10);
+		Member member5 = new Member("member5", 20);
+		memberJpaRepository.save(member1);
+		memberJpaRepository.save(member2);
+		memberJpaRepository.save(member3);
+		memberJpaRepository.save(member4);
+		memberJpaRepository.save(member5);
+
+		int age = 10;
+		int offset = 1;
+		int limit = 3;
+
+		List<Member> findMembers = memberJpaRepository.findPaging(age, offset, limit);
+		long totalCount = memberJpaRepository.getTotalCount(age);
+		assertThat(findMembers.size()).isEqualTo(3);
+		assertThat(totalCount).isEqualTo(4);
+	}
 }

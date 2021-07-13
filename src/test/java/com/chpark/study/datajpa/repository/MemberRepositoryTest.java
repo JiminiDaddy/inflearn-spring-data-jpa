@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +23,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.offset;
 
 @Rollback(false)
 @Transactional
@@ -191,5 +196,99 @@ class MemberRepositoryTest {
 		List<String> memberNames = memberRepository.findNames();
 		assertThat(memberNames.size()).isEqualTo(4);
 		System.out.println(Arrays.toString(memberNames.toArray()));
+	}
+
+	@Test
+	@DisplayName("페이징")
+	void findByAgeWithPage() {
+		Team teamA = new Team("teamA");
+		Team teamB = new Team("teamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 10, teamA);
+		Member member3 = new Member("member3", 10, teamA);
+		Member member4 = new Member("member4", 10, teamA);
+		Member member5 = new Member("member5", 10, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+		memberRepository.save(member4);
+		memberRepository.save(member5);
+
+		int age = 10;
+		int offset = 0;
+		int limit = 3;
+		// Pageable에서의 offset은 전체 데이터에서의 Index가 아니다.
+		// 2번째 파라미터인 limit에 따라 offset이 가리키는 데이터의 Index가 변화한다.
+		// 예를들어 데이터가 100개있고, offset=0, limit=10인경우 페이징된 데이터의 1번째 Index는 0이다.
+		// 그리고 offset=1, limit=10인경우 페이징된 데이터의 1번째 Index는 10이 된다. (offset=0이 0~9번째 데이터를 갖고있기때문)
+		PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(Sort.Direction.DESC, "name"));
+		Page<Member> pages = memberRepository.findByAge(age, pageRequest);
+
+		List<Member> contents = pages.getContent();			// 페이징된 데이터
+		System.out.println(Arrays.toString(contents.toArray()));
+		assertThat(contents.size()).isEqualTo(3);			// 페이징된 데이터의 개수
+		assertThat(pages.getTotalElements()).isEqualTo(5);	// 전체 데이터 수
+		assertThat(pages.getNumber()).isEqualTo(0);			// 페이지 번호
+		assertThat(pages.isFirst()).isTrue();				// 첫 페이지 1번인가?
+		assertThat(pages.hasNext()).isTrue();				// 다음 페이지가 있는가?
+		assertThat(pages.isLast()).isFalse();				// 마지막 페이지인가?
+		assertThat(pages.hasPrevious()).isFalse();			// 이전 페이지가 존재하는가?
+	}
+
+	@Test
+	@DisplayName("슬라이싱")
+	void findSlicedByAge() {
+		Member member1 = new Member("member1", 10);
+		Member member2 = new Member("member2", 10);
+		Member member3 = new Member("member3", 10);
+		Member member4 = new Member("member4", 10);
+		Member member5 = new Member("member5", 10);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+		memberRepository.save(member4);
+		memberRepository.save(member5);
+
+		int age = 10;
+		int offset = 1;
+		int limit = 3;
+		PageRequest pageRequest = PageRequest.of(offset, limit, Sort.Direction.DESC, "name");
+
+		Slice<Member> slicedMembers = memberRepository.findSlicedMemberByAge(age, pageRequest);
+		List<Member> members = slicedMembers.getContent();
+
+		assertThat(members.size()).isEqualTo(2);		// 5 - 3
+		assertThat(slicedMembers.hasNext()).isFalse();
+		assertThat(slicedMembers.isFirst()).isFalse();
+		assertThat(slicedMembers.isLast()).isTrue();
+		assertThat(slicedMembers.getNumber()).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("카운트 분리")
+	void count() {
+		Member member1 = new Member("member1", 10);
+		Member member2 = new Member("member2", 10);
+		Member member3 = new Member("member3", 10);
+		Member member4 = new Member("member4", 10);
+		Member member5 = new Member("member5", 10);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+		memberRepository.save(member4);
+		memberRepository.save(member5);
+
+		int age = 10;
+		int offset = 1;
+		int limit = 3;
+		PageRequest pageRequest = PageRequest.of(offset, limit, Sort.Direction.DESC, "name");
+
+		Page<Member> pages = memberRepository.findMemberAllCountBy(pageRequest);
+		System.out.println(pages.getTotalElements());
+
+
 	}
 }

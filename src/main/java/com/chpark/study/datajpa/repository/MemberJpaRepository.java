@@ -39,4 +39,19 @@ public class MemberJpaRepository {
 	public void delete(Member member) {
 		entityManager.remove(member);
 	}
+
+	// offset: 시작Index, limit: 조회할 갯수
+	public List<Member> findPaging(int age, int offset, int limit) {
+		return entityManager.createQuery("select m from Member m where m.age = :age order by m.name desc", Member.class)
+			.setParameter("age", age)
+			.setFirstResult(offset)
+			.setMaxResults(limit)
+			.getResultList();
+	}
+
+	public long getTotalCount(int age) {
+		return entityManager.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+			.setParameter("age", age)
+			.getSingleResult();
+	}
 }
