@@ -175,4 +175,21 @@ class MemberRepositoryTest {
 			Member find = memberRepository.findMemberByName("user2");
 		}).isInstanceOf(IncorrectResultSizeDataAccessException.class);	// NonUniqueResultException을 Spring이 한번 감싸 새로운 예외 던짐
 	}
+
+	@Test
+	@DisplayName("멤버 이름 목록조회")
+	void findNames() {
+		Member member1 = new Member("user1", 30);
+		Member member2 = new Member("user2", 20);
+		Member member3 = new Member("user3", 50);
+		Member member4 = new Member("user4", 10);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+		memberRepository.save(member4);
+
+		List<String> memberNames = memberRepository.findNames();
+		assertThat(memberNames.size()).isEqualTo(4);
+		System.out.println(Arrays.toString(memberNames.toArray()));
+	}
 }
