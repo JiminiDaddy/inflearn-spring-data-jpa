@@ -288,7 +288,26 @@ class MemberRepositoryTest {
 
 		Page<Member> pages = memberRepository.findMemberAllCountBy(pageRequest);
 		System.out.println(pages.getTotalElements());
+	}
 
+	@Test
+	@DisplayName("벌크성 수정쿼리")
+	void blukAgePlus() {
+		Member member1 = new Member("member1", 10);
+		Member member2 = new Member("member2", 20);
+		Member member3 = new Member("member3", 30);
+		Member member4 = new Member("member4", 40);
+		Member member5 = new Member("member5", 50);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+		memberRepository.save(member4);
+		memberRepository.save(member5);
 
+		int count = memberRepository.blukAgePlus(30);
+		assertThat(count).isEqualTo(3);
+
+		Member findMember = memberRepository.findById(5L).get();
+		assertThat(findMember.getAge()).isEqualTo(51);
 	}
 }
