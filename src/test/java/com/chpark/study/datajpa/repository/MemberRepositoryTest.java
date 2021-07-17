@@ -369,4 +369,16 @@ class MemberRepositoryTest {
 		Member findMember2 = memberRepository.findByName("member1").get(0);
 		//assertThat(findMember2.getName()).isEqualTo("new_member1");
 	}
+
+	@Test
+	@DisplayName("사용자정의리포지토리")
+	void findAllWithCusotmRepository() {
+		Member member1 = new Member("member1", 10);
+		memberRepository.save(member1);
+		entityManager.flush();
+		entityManager.clear();
+
+		List<Member> findMembers = memberRepository.findAllCustom();
+		assertThat(findMembers.size()).isEqualTo(1);
+	}
 }

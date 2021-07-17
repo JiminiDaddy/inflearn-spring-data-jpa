@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 	// 이름이 name이면서 나이가 age보다 큰 경우를 조회한다
 	List<Member> findByNameAndAgeGreaterThan(String name, int age);
 	// 모든 멤버를 조회한다
