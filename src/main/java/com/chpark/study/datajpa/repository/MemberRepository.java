@@ -5,11 +5,10 @@ import com.chpark.study.datajpa.dto.MemberDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
+import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +50,24 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 	Slice<Member> findSlicedMemberByAge(int age, Pageable pageable);
 
-	@Modifying(clearAutomatically = true)
+	@Modifying(clearAutomatically = true)	// 벌크 쿼리 실행 후 영속성컨텍스트를 자동으로 초기화
 	@Query("update Member m set m.age = m.age + 1 where m.age >= :age")
 	int blukAgePlus(int age);
+
+	@Query("select m from Member m join fetch m.team")
+	List<Member> findMembersFetchJoin();
+
+	@Override
+	@EntityGraph(attributePaths = {"team"})
+	List<Member> findAll();
+
+	@EntityGraph(attributePaths = {"team"})
+	@Query("select m from Member m")
+	List<Member> findMembersEntityGraph();
+
+	@EntityGraph(attributePaths = {"team"})
+	List<Member> findByName(String name);
+
+	@QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+	List<Member> findHintByName(String name);
 }

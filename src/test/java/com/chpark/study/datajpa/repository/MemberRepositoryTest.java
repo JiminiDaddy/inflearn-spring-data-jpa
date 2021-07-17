@@ -15,15 +15,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.offset;
 
 @Rollback(false)
 @Transactional
@@ -34,6 +33,9 @@ class MemberRepositoryTest {
 
 	@Autowired
 	private TeamRepository teamRepository;
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Test
 	void testMember() {
@@ -309,5 +311,62 @@ class MemberRepositoryTest {
 
 		Member findMember = memberRepository.findById(5L).get();
 		assertThat(findMember.getAge()).isEqualTo(51);
+	}
+
+	@Test
+	@DisplayName("EntityGraph")
+	void finMemberLazy() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		// Member.Team이 Lazy로 관계가 맺어저있으므로, member수에 따른 N+1 이슈가 발생한다.
+		// List<Member> findMembers = memberRepository.findAll();
+
+		// 직접 JPQL 작성하여 조회
+		// List<Member> findMembers = memberRepository.findMembersFetchJoin();
+
+		// @EntityGraph 애너테이션 사용
+		// 기본적으로 left outer join을 사용하며, 내부적으로 fetch join을 사용한다.
+		// List<Member> findMembers = memberRepository.findMembersEntityGraph();
+		// List<Member> findMembers = memberRepository.findAll();
+
+		// QueryMethod + @EntityGraph
+		List<Member> findMembers = memberRepository.findByName("member1");
+
+		for (Member findMember : findMembers) {
+			System.out.println("findMember.getName = " + findMember.getName());
+			System.out.println("findMember.getTeam = " + findMember.getTeam().getName());
+			System.out.println("findMember.Team.class = " + findMember.getTeam().getClass());
+		}
+	}
+
+	@Test
+	@DisplayName("JPA Hints")
+	void findHintByName() {
+		Member member1 = new Member("member1", 10);
+		memberRepository.save(member1);
+		entityManager.flush();
+		entityManager.clear();
+
+		Member findMember = memberRepository.findHintByName("member1").get(0);
+		assertThat(findMember.getName()).isEqualTo("member1");
+		// 힌트에 의해 readOnly가 적용되어 update sql은 생성되지 않는다.
+		findMember.changeName("new_member1");
+
+		entityManager.flush();
+		Member findMember2 = memberRepository.findByName("member1").get(0);
+		//assertThat(findMember2.getName()).isEqualTo("new_member1");
 	}
 }
