@@ -8,7 +8,8 @@ import javax.persistence.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-public class Member {
+//public class Member extends JpaBaseEntity{		// 순수 JPA를 사용
+public class Member extends BaseEntity {			// SpringDataJpa를 사용
 	@Id @GeneratedValue
 	@Column(name = "member_id")		// 관례상 ColumnName = 테이블명_필드명으로 구성한다.
 	private Long id;
