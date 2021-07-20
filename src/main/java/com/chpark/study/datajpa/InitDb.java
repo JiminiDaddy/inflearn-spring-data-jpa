@@ -1,7 +1,9 @@
 package com.chpark.study.datajpa;
 
 import com.chpark.study.datajpa.domain.Member;
+import com.chpark.study.datajpa.domain.Team;
 import com.chpark.study.datajpa.repository.MemberRepository;
+import com.chpark.study.datajpa.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +13,15 @@ import javax.annotation.PostConstruct;
 @Component
 public class InitDb {
 	private final MemberRepository memberRepository;
+	private final TeamRepository teamRepository;
 
 	@PostConstruct
 	public void init() {
-		memberRepository.save(new Member("user1", 10));
-		memberRepository.save(new Member("user2", 20));
-		memberRepository.save(new Member("user3", 30));
-		memberRepository.save(new Member("user4", 40));
+		Team team = new Team("teamA");
+		teamRepository.save(team);
+
+		for (int i = 1; i <= 100; ++i) {
+			memberRepository.save(new Member("user" + i, i, team));
+		}
 	}
 }

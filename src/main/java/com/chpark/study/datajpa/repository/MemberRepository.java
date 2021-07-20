@@ -25,7 +25,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 	// @Param 생략 가능
 	//@Query("select m from Member m where m.name = :name and m.age = :age")
 	//List<Member> findMember(String name, int age);
-	@Query("select new com.chpark.study.datajpa.dto.MemberDto(m.id, m.name, t.name) from Member m join m.team t")
+	@Query("select new com.chpark.study.datajpa.dto.MemberDto(m.id, m.name, 0, t.name) from Member m join m.team t")
 	List<MemberDto> findMemberDto();
 
 	@Query("select m from Member m where m.name in :names")

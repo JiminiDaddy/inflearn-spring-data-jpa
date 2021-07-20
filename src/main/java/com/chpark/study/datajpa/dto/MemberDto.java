@@ -1,16 +1,22 @@
 package com.chpark.study.datajpa.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import com.chpark.study.datajpa.domain.Member;
+import lombok.*;
 
+@AllArgsConstructor
 @EqualsAndHashCode
 @ToString
 @Getter
-@AllArgsConstructor
 public class MemberDto {
 	private Long memberId;
 	private String memberName;
+	private int memberAge;
 	private String teamName;
+
+	public MemberDto(Member member) {
+		this.memberId = member.getId();
+		this.memberName = member.getName();
+		this.teamName = member.getTeam().getName();
+		this.memberAge = member.getAge();
+	}
 }

@@ -12,6 +12,12 @@ spring:
       hibernate:
         #show_sql: true   # JPA가 실행하는 Query를 Console에 모두 출력함
         format_sql: true  # Query가 Formatting되어 예쁘게 출력됨
+  data:
+    web:
+      pageable:
+        default-page-size: 10   # 기본 페이지 사이즈
+        max-page-size: 100      # 최대 페이지 사이즈:w
+
 
 
 logging:
