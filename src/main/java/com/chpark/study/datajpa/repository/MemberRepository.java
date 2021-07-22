@@ -1,7 +1,10 @@
 package com.chpark.study.datajpa.repository;
 
 import com.chpark.study.datajpa.domain.Member;
+import com.chpark.study.datajpa.dto.MemberNameOnly;
 import com.chpark.study.datajpa.dto.MemberDto;
+import com.chpark.study.datajpa.dto.MemberNameOnlyDto;
+import com.chpark.study.datajpa.dto.NestedClosedProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -70,4 +73,12 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 
 	@QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
 	List<Member> findHintByName(String name);
+
+	List<MemberNameOnly> findProjectionsByName(String name);
+
+	List<MemberNameOnlyDto> findProjectionsClassByName(String name);
+
+	<T> List<T> findProjectionsGenericByName(String name, Class<T> type);
+
+	List<NestedClosedProjection> findProjectionsNestedByName(String name);
 }

@@ -2,7 +2,10 @@ package com.chpark.study.datajpa.repository;
 
 import com.chpark.study.datajpa.domain.Member;
 import com.chpark.study.datajpa.domain.Team;
+import com.chpark.study.datajpa.dto.MemberNameOnly;
 import com.chpark.study.datajpa.dto.MemberDto;
+import com.chpark.study.datajpa.dto.MemberNameOnlyDto;
+import com.chpark.study.datajpa.dto.NestedClosedProjection;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -380,5 +383,106 @@ class MemberRepositoryTest {
 
 		List<Member> findMembers = memberRepository.findAllCustom();
 		assertThat(findMembers.size()).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("인터페이스 기반 Closed-Projections")
+	void projectionsByInterface() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		List<MemberNameOnly> result = memberRepository.findProjectionsByName("member2");
+		assertThat(result.size()).isEqualTo(1);
+		for (MemberNameOnly memberNameOnly : result) {
+			System.out.println("memberNameOnly = " + memberNameOnly.getName());
+		}
+	}
+
+	@Test
+	@DisplayName("클래스 기반 Closed-Projections")
+	void projectionsByClass() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		List<MemberNameOnlyDto> result = memberRepository.findProjectionsClassByName("member2");
+		assertThat(result.size()).isEqualTo(1);
+		for (MemberNameOnlyDto memberNameOnly : result) {
+			System.out.println("memberNameOnly = " + memberNameOnly.getName());
+		}
+	}
+
+	@Test
+	@DisplayName("제네릭 기반 Closed-Projections")
+	void projectionsByGeneric() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		List<MemberNameOnly> result = memberRepository.findProjectionsGenericByName("member2", MemberNameOnly.class);
+		assertThat(result.size()).isEqualTo(1);
+		for (MemberNameOnly memberNameOnly : result) {
+			System.out.println("memberNameOnly = " + memberNameOnly.getName());
+		}
+	}
+
+	@Test
+	@DisplayName("중첩구조의 Closed-Projections")
+	void projectionsByNested() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		List<NestedClosedProjection> result = memberRepository.findProjectionsNestedByName("member2");
+		assertThat(result.size()).isEqualTo(1);
+		for (NestedClosedProjection memberNameOnly : result) {
+			System.out.println("memberNameOnly.member = " + memberNameOnly.getName());
+			System.out.println("memberNameOnly.team = " + memberNameOnly.getTeam().getName());
+		}
 	}
 }
