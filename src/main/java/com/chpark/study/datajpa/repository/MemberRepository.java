@@ -1,10 +1,7 @@
 package com.chpark.study.datajpa.repository;
 
 import com.chpark.study.datajpa.domain.Member;
-import com.chpark.study.datajpa.dto.MemberNameOnly;
-import com.chpark.study.datajpa.dto.MemberDto;
-import com.chpark.study.datajpa.dto.MemberNameOnlyDto;
-import com.chpark.study.datajpa.dto.NestedClosedProjection;
+import com.chpark.study.datajpa.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -81,4 +78,10 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 	<T> List<T> findProjectionsGenericByName(String name, Class<T> type);
 
 	List<NestedClosedProjection> findProjectionsNestedByName(String name);
+
+	@Query(value = "select m.MEMBER_ID as MemberId, m.NAME as MemberName, t.NAME as TeamName" +
+		" from Member m inner join Team t on m.team_id = t.team_id",
+		countQuery = "select count(m.member_id) from Member m",
+		nativeQuery = true)
+	Page<MemberProjection> findByNativeProjection(Pageable pageable);
 }

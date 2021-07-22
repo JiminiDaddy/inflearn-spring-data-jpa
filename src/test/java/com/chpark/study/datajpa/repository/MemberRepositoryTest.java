@@ -2,10 +2,7 @@ package com.chpark.study.datajpa.repository;
 
 import com.chpark.study.datajpa.domain.Member;
 import com.chpark.study.datajpa.domain.Team;
-import com.chpark.study.datajpa.dto.MemberNameOnly;
-import com.chpark.study.datajpa.dto.MemberDto;
-import com.chpark.study.datajpa.dto.MemberNameOnlyDto;
-import com.chpark.study.datajpa.dto.NestedClosedProjection;
+import com.chpark.study.datajpa.dto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Rollback(false)
+@Rollback(true)
 @Transactional
 @SpringBootTest
 class MemberRepositoryTest {
@@ -484,5 +481,54 @@ class MemberRepositoryTest {
 			System.out.println("memberNameOnly.member = " + memberNameOnly.getName());
 			System.out.println("memberNameOnly.team = " + memberNameOnly.getTeam().getName());
 		}
+	}
+
+	@Test
+	@DisplayName("NativeQuery + Projection")
+	void nativeQueryWithProjection() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		Page<MemberProjection> result = memberRepository.findByNativeProjection(PageRequest.of(0, 10,  Sort.by(Sort.Direction.ASC, "name")));
+		List<MemberProjection> content = result.getContent();
+		for (MemberProjection memberProjection : content) {
+			System.out.println("member_id   = " + memberProjection.getMemberId());
+			System.out.println("member_name = " + memberProjection.getMemberName());
+			System.out.println("team_name   = " + memberProjection.getTeamName());
+			System.out.println("===========");
+		}
+	}
+
+	@Test
+	@DisplayName("fetch join")
+	void fetchJoin() {
+		Team teamA = new Team("TeamA");
+		Team teamB = new Team("TeamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 20, teamA);
+		Member member3 = new Member("member3", 30, teamA);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		memberRepository.save(member3);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		List<Member> membersFetchJoin = memberRepository.findMembersFetchJoin();
 	}
 }
