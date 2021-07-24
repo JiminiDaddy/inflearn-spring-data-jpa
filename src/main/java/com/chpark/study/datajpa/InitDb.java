@@ -15,7 +15,8 @@ public class InitDb {
 	private final MemberRepository memberRepository;
 	private final TeamRepository teamRepository;
 
-	@PostConstruct
+	// 테스트 코드 작성할 땐 주석처리함
+	//@PostConstruct
 	public void init() {
 		Team team = new Team("teamA");
 		teamRepository.save(team);

@@ -3,6 +3,7 @@ package com.chpark.study.datajpa.repository;
 import com.chpark.study.datajpa.domain.Member;
 import com.chpark.study.datajpa.domain.Team;
 import com.chpark.study.datajpa.dto.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Rollback(true)
+@Rollback
 @Transactional
 @SpringBootTest
 class MemberRepositoryTest {
@@ -36,6 +37,17 @@ class MemberRepositoryTest {
 
 	@PersistenceContext
 	private EntityManager entityManager;
+
+	@AfterEach
+	void tearDown() {
+		memberRepository.deleteAll();
+		teamRepository.deleteAll();
+		// H2 DB를 사용하는 경우 DB를 아래와 같이 설정해주어야 Id값이 Auto-Increment될 때 다른 테스트에 영향주지않고 새로 시작할 수 있다.
+		// 단 식별자 생성전략을 IDENTITY로 변경해주어야 한다. (SpringBoot 1.x와 2.x의 식별자 생성전략 기본값이 바뀜, default=TABLE방식)
+		// property에서 hibernate의 새로운 식별자 생성 옵션을 false처리할 수도 있다. (spring.jpa.hibernate.use-new-id-generator-mappings: false)
+		// 하지만 결국엔 SpringBoot가 Hibernate를 따라갈것이라 예상되므로 옵션으로 처리안하고 IDENTITY사용함 (이동욱님 블로그 참조)
+		entityManager.createNativeQuery("ALTER TABLE MEMBER ALTER COLUMN member_id RESTART WITH 1").executeUpdate();
+	}
 
 	@Test
 	void testMember() {
@@ -309,6 +321,11 @@ class MemberRepositoryTest {
 		int count = memberRepository.blukAgePlus(30);
 		assertThat(count).isEqualTo(3);
 
+		// 이렇게 테스트해야 다른 테스트에 영향 받지않고 실제 member5의 Id를 통해 테스트를 수행할 수 있다.
+		//Member findMember = memberRepository.findById(member5.getId()).orElseThrow(() -> new IllegalArgumentException("Wrong"));
+
+		// 만약 아래와 같이 Id값을 Fix하여 테스트할 경우, 다른 테스트에 영향이 없도록 DB설정을 해주어야 한다.
+		// @After 부분 참고
 		Member findMember = memberRepository.findById(5L).get();
 		assertThat(findMember.getAge()).isEqualTo(51);
 	}
